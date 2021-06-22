@@ -105,6 +105,7 @@ class Fugu:
                 if good_prob < 0.5:
                     self.is_ban[i][j] = 1
                 else:
+                    self.is_ban[i][j] = 0
                     self.is_all_ban=False
 
 
@@ -217,6 +218,8 @@ class Fugu:
             qvalue -= self.lam*diff
 
             for k in range(self.dis_sending_time_):
+                #此处我没有取k=dis_sending_time_的时候，因为我认为sending_time_prob_每个format的最后一个代表的是
+                #[9.5,Inf],这样的话之后的 k - cur_buffer就没有意义了
                 if(self.sending_time_prob_[index+1][next_format][k] == 0):
                     continue
                 rebuffer = k - cur_buffer
@@ -229,7 +232,7 @@ class Fugu:
                     real_rebuffer = rebuffer * self.unit_buf * 0.25
                 qvalue -= self.mu * real_rebuffer
                 _, next_best_qvalue = self.find_best_formats(index + 1, next_buffer, next_format, num + 1)
-                qvalue += next_best_qvalue
+                qvalue += self.sending_time_prob_[index+1][next_format][k]*next_best_qvalue
             if (qvalue > max_qvalue):
                 best_format = next_format
                 max_qvalue = qvalue
