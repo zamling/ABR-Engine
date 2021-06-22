@@ -1,3 +1,4 @@
+import torch
+import torch.nn as nn
 
-
-def discretize
+class TransmissionTimePredictor(nn.Module):

@@ -94,12 +94,13 @@ class MPC:
         for next_format in range(len(self.client.video[num])):
             trans_time = throughput*self.client.video[num][next_format].size
             if len(self.past_chrunk)==0:
-                real_rebuffer = 0
+                diff = 0
             else:
-                real_rebuffer = trans_time - self.real_buffer[cur_buffer]
+                diff = abs(cur_format.ssim - self.client.video[num][next_format].ssim)
+            real_rebuffer = trans_time - self.real_buffer[cur_buffer]
             qvalue = self.client.video[num][next_format].ssim
             - self.lam * max(0,real_rebuffer)
-            - self.mu * abs(cur_format.ssim - self.client.video[num][next_format].ssim)
+            - self.mu * diff
 
             if qvalue > max_qvalue:
                 best_format = next_format
@@ -115,7 +116,7 @@ class MPC:
 
         for i in range(self.lookahead_horizon):
             for j in range(len(self.client.video[num+i])):
-                self.cur_ssims[i+1][j] = self.client.video[num+i][j]
+                self.cur_ssims[i+1][j] = self.client.video[num+i][j].ssim
 
         # get a series of throughput
         self.throughput_predictor()
@@ -148,18 +149,19 @@ class MPC:
         for next_format in range(len(self.client.video[num])):
             if len(self.past_chrunk) == 0 and index == 0:
                 #起始状态下预测第一个没有卡顿
-                real_rebuffer = 0
+                diff = 0
             else:
-                real_rebuffer = self.tt[index+1][next_format] - self.real_buffer[cur_buffer]
+                diff = abs(self.cur_ssims[index][cur_format]-self.cur_ssims[index+1][next_format])
+            real_rebuffer = self.tt[index+1][next_format] - self.real_buffer[cur_buffer]
 
             #卡顿的时间 = 下一个format的tt-当前的buffer size
             next_buffer = min(self.buf_lengh,self.discretize_buffer(max(0,-real_rebuffer))+self.client.video[num+1][next_format].period)
             qvalue = self.cur_ssims[index][cur_format] - \
-                     self.lam * abs(self.cur_ssims[index][cur_format]-self.cur_ssims[index+1][next_format]) \
+                     self.lam * diff \
                      - self.mu * max(0,real_rebuffer)
             _,next_best_qvalue = self.find_best_formats(index+1,next_buffer,next_format,num+1)
 
-            qvalue += next_format
+            qvalue += next_best_qvalue
 
             if(qvalue > max_qvalue):
                 best_format = next_format

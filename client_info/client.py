@@ -10,6 +10,10 @@ class BasicClient:
         return 1000
         pass
 
+    def get_cur_tcp_info(self):
+        #当前网络参数情况
+        return []
+
 
 
 

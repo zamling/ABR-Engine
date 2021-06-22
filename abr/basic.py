@@ -13,3 +13,14 @@ class Chunk:
         self.rtt=rtt
         self.delivery_rate=delivery_rate
         self.period = period
+        self.PKT_BYT = 1500
+
+    def get_all_feas(self):
+        res = []
+        res.append(self.delivery_rate / self.PKT_BYT)
+        res.append(self.cwnd)
+        res.append(self.in_flight)
+        res.append(self.min_rtt / 1000000)
+        res.append(self.rtt / 1000000)
+        return res
+
